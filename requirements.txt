@@ -1,0 +1,6 @@
+Flask
+huggingface_hub
+python-dotenv
+pypdf
+requests
+Pillow

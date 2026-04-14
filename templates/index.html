@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Super Studio</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+    <h1>✨ AI Super Studio</h1>
+    <h2 class="hq">🤖 Rawad's AI Assistant 🤖</h2>
+
+    <div class="container">
+        
+        <div class="card full-width">
+            <h2>💬 Chat Assistant</h2>
+            <input type="text" id="chatInput" placeholder="Ask me anything...">
+            <button onclick="sendChat()">Send Message</button>
+            <div id="chatResult" class="result-box">AI response will appear here...</div>
+        </div>
+
+        <div class="card full-width">
+            <h2>🎨 Generate Image</h2>
+            <input type="text" id="imgPrompt" placeholder="e.g. A cyberpunk cat in neon rain">
+            <button onclick="genImage()">Generate Art</button>
+            <div id="imgResult" class="result-box">
+                <span class="loading">Creating masterpiece...</span>
+            </div>
+        </div>
+        <!-- Video Generation Section 
+        <div class="card full-width">
+            <h2>🎥 Generate Video</h2>
+            <input type="text" id="videoPrompt" placeholder="e.g. A dancing robot">
+            <button onclick="genVideo()">Generate Video</button>
+            <div id="videoResult" class="result-box">
+                <span class="loading">Creating video...</span>
+            </div>
+        </div>
+    -->
+
+        <div class="card full-width">
+            <h2>📄 Chat with Document (PDF)</h2>
+            <input type="file" id="docFile" accept=".pdf">
+            <input type="text" id="docPrompt" placeholder="Ask a question about the PDF...">
+            <button onclick="chatFile()">Analyze Document</button>
+            <div id="docResult" class="result-box">Upload a PDF to chat with it.</div>
+        </div>
+
+    </div>
+
+    <script>
+        async function sendChat() {
+            const msg = document.getElementById('chatInput').value;
+            const resBox = document.getElementById('chatResult');
+            resBox.innerText = "Thinking...";
+            
+            const res = await fetch('/chat', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            });
+            const data = await res.json();
+            resBox.innerText = data.response || data.error;
+        }
+
+        async function genImage() {
+            const prompt = document.getElementById('imgPrompt').value;
+            const resBox = document.getElementById('imgResult');
+            resBox.innerHTML = '<span class="loading" style="display:block">Generating... (this takes ~5-10s)</span>';
+
+            const res = await fetch('/generate-image', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({prompt: prompt})
+            });
+            const data = await res.json();
+            if(data.image_url) {
+                resBox.innerHTML = `<img src="${data.image_url}" class="preview">`;
+            } else {
+                resBox.innerText = data.error;
+            }
+        }
+        // async function genVideo() {
+        //     const prompt = document.getElementById('videoPrompt').value;
+        //     const resBox = document.getElementById('videoResult');
+        //     resBox.innerHTML = '<span class="loading" style="display:block">Generating video... (this may take up to a minute)</span>';
+
+        //     const res = await fetch('/generate-video', {
+        //         method: 'POST', headers: {'Content-Type': 'application/json'},
+        //         body: JSON.stringify({prompt: prompt})
+        //     });
+        //     const data = await res.json();
+        //     if(data.video_url) {
+        //         resBox.innerHTML = `<video controls class="preview"><source src="${data.video_url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+        //     } else {
+        //         resBox.innerText = data.error;
+        //     }
+        // }
+
+
+        async function chatFile() {
+            const fileInput = document.getElementById('docFile');
+            const question = document.getElementById('docPrompt').value;
+            const resBox = document.getElementById('docResult');
+
+            if(fileInput.files.length === 0) return alert("Please select a PDF first");
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('question', question);
+
+            resBox.innerText = "Reading document and thinking...";
+            const res = await fetch('/chat-file', { method: 'POST', body: formData });
+            const data = await res.json();
+            resBox.innerText = data.response || data.error;
+        }
+    </script>
+</body>
+</html>
